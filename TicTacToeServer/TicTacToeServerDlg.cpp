@@ -358,12 +358,15 @@ int ToggleRematch(LPSOCKET_INFORMATION Client) {
 	{
 		return 1;
 	}
-	if (Lobby->FirstOponent == Client) {
+	if (Lobby->FirstOponent == Client) 
+	{
 		Lobby->FirstOpWannaRematch = true;
+		SendToClient("10", 3, Lobby->SecondOponent);
 	}
 	else if (Lobby->SecondOponent == Client)
 	{
 		Lobby->SecondOpWannaRematch = true;
+		SendToClient("10", 3, Lobby->FirstOponent);
 	}
 
 	if (Lobby->FirstOpWannaRematch == TRUE &&
