@@ -220,7 +220,7 @@ int SendToSocket(char* Str, int length, SOCKET* socket) {
 	return 0;
 }
 
-int SendToClient(char* Str, int length, LPSOCKET_INFORMATION Client) {
+int SendToClient(CHAR* Str, int length, LPSOCKET_INFORMATION Client) {
 	if (Client == NULL)
 	{
 		return 1;
@@ -228,7 +228,7 @@ int SendToClient(char* Str, int length, LPSOCKET_INFORMATION Client) {
 	char SubStr[100];
 	LPDWORD DWORDLenght = (LPDWORD)&length;
 	CListBox* pLB = (CListBox*)(CListBox::FromHandle(hWnd_LB));
-	strcpy(Client->DataBuf.buf, Str);
+	Client->DataBuf.buf = Str;
 	Client->DataBuf.len = length;
 	if (WSASend(Client->Socket,
 		&(Client->DataBuf), 1,
@@ -358,7 +358,7 @@ int ToggleRematch(LPSOCKET_INFORMATION Client) {
 	{
 		return 1;
 	}
-	if (Lobby->FirstOponent == Client) 
+	if (Lobby->FirstOponent == Client)
 	{
 		Lobby->FirstOpWannaRematch = true;
 		SendToClient("10", 3, Lobby->SecondOponent);
@@ -388,12 +388,28 @@ int ToggleRematch(LPSOCKET_INFORMATION Client) {
 	return 1;
 }
 
+int CheckLobbyName(CString lobbyName) {
+	for (POSITION pos = LobbyList.GetHeadPosition(); pos != NULL; LobbyList.GetNext(pos))
+	{
+		if (lobbyName == LobbyList.GetAt(pos)->name)
+		{
+			return 1; // Говорим что такое лобби занято и нужно назваться по другому
+		}
+	}
+	return 0;
+}
+
 int CreateLobby(CString lobbyName, LPSOCKET_INFORMATION SocketInfo)
 {
+	if (CheckLobbyName(lobbyName))
+	{
+		return 2; // плохое имя лобби
+	}
+
 	LPLOBBY newLobby = CreateLobbyInformation();
 	if (newLobby == NULL)
 	{
-		return 1;//сообщеине уже выведено в функции.
+		return 1;//сообщеине уже выведено в функции CreateLobbyInformation.
 	}
 	newLobby->FirstOponent = SocketInfo;
 	newLobby->SecondOponent = NULL;
@@ -455,7 +471,7 @@ int LeaveLobby(LPSOCKET_INFORMATION Client) {
 }
 
 void SendLobbysToClient(LPSOCKET_INFORMATION sock_info) {
-	char  Str[200];
+	CHAR  Str[150];
 	LPLOBBY curLobby;
 	if (sock_info != NULL) {
 
@@ -866,7 +882,10 @@ UINT ListenThread(PVOID lpParam)
 						SendToClient("9", 2, SocketInfo);
 						continue;
 					}
-					CreateLobby(lobbyName, SocketInfo); //Создать лобби
+					if (CreateLobby(lobbyName, SocketInfo) == 2) {
+						SendToClient("0", 2, SocketInfo);
+						continue;
+					}
 				}
 				else if (a == -2)
 				{

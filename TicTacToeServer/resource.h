@@ -12,7 +12,6 @@
 #define IDC_PRINT                       1002
 #define IDC_LISTBOX                     1003
 #define IDC_CANCEL                      1005
-#define IDC_LIST3                       1007
 #define IDC_LOBBYLIST                   1007
 
 // Next default values for new objects
